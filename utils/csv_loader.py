@@ -30,8 +30,16 @@ def load_csv_to_sqlite(file_path: str, table_name: str = "dataset"):
     # Ensure database directory exists
     os.makedirs(os.path.dirname(DATABASE_PATH), exist_ok=True)
     
-    # Read CSV
-    df = pd.read_csv(file_path)
+    # Read CSV with robust encoding handling to support Excel/Windows generated files
+    try:
+        df = pd.read_csv(file_path, encoding='utf-8')
+    except UnicodeDecodeError:
+        try:
+            # Common fallback for Excel-generated CSVs
+            df = pd.read_csv(file_path, encoding='windows-1252')
+        except UnicodeDecodeError:
+            # Last resort: replace any unreadable characters
+            df = pd.read_csv(file_path, encoding='utf-8', encoding_errors='replace')
     
     # Clean column names
     df.columns = clean_column_names(df.columns)

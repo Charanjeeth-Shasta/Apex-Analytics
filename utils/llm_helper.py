@@ -4,8 +4,10 @@ import json
 import google.generativeai as genai
 from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+# Load environment variables from the project root .env file
+# __file__ is utils/llm_helper.py, so we go up one level to reach the project root
+_project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+load_dotenv(os.path.join(_project_root, ".env"))
 
 def get_system_prompt():
     """Reads the system prompt from the system_prompt.md file."""
@@ -50,8 +52,8 @@ def generate_sql_query(user_prompt: str, schema: str, table_name: str = "dataset
 
     genai.configure(api_key=api_key)
     
-    # We use gemini-1.5-flash for speed and reliability in prototyping
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    # Use gemini-2.5-flash — default model for new AI Studio API keys
+    model = genai.GenerativeModel('gemini-2.5-flash')
     
     system_prompt = get_system_prompt()
     
