@@ -115,7 +115,9 @@ revenue share by category → pie chart
 
 # Output Format
 
-Your response must **always follow this JSON structure**.
+Your response must **always follow one of two JSON structures**.
+
+## Case 1: Query is clear and answerable
 
 ```
 {
@@ -126,6 +128,26 @@ Your response must **always follow this JSON structure**.
  "explanation": "Short explanation of the query"
 }
 ```
+
+## Case 2: Query is vague or ambiguous
+
+If the user's question is **too vague to answer with a specific SQL query** (e.g., "depict ROI values", "show performance", "analyze data"), do NOT guess. Instead return:
+
+```
+{
+ "clarification_needed": true,
+ "question": "Your clarifying question here"
+}
+```
+
+Examples of when to ask for clarification:
+- "Show performance" → unclear which metric or dimension
+- "Depict ROI" → unclear if they want total, average, by campaign, by month, etc.
+- "Analyze data" → too broad to map to a SQL query
+
+Examples of prompts that are clear enough to proceed with:
+- "Show total revenue by region" → proceed
+- "Top 5 products by sales" → proceed
 
 Example response:
 
