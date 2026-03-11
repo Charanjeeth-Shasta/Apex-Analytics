@@ -19,6 +19,9 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50 MB
 
+CHATS_DIR = os.path.join("data", "chats")
+os.makedirs(CHATS_DIR, exist_ok=True)
+
 ALLOWED_EXTENSIONS = {'csv'}
 
 # Initialise users table on startup
@@ -181,12 +184,42 @@ def chat():
 
 
 # ─────────────────────────────────────────
-# Keep legacy /query endpoint as alias
+# Chat persistence (per-user JSON files)
 # ─────────────────────────────────────────
 
-@app.route('/query', methods=['POST'])
-def query():
-    return chat()
+import json
+
+@app.route('/chats/<username>', methods=['GET'])
+def get_chats(username):
+    """Load all chats for a user."""
+    path = os.path.join(CHATS_DIR, f"{username}.json")
+    if os.path.exists(path):
+        with open(path, 'r', encoding='utf-8') as f:
+            return jsonify(json.load(f)), 200
+    return jsonify({}), 200
+
+
+@app.route('/chats/<username>', methods=['POST'])
+def save_chats(username):
+    """Save (overwrite) all chats for a user."""
+    data = request.get_json(force=True)
+    path = os.path.join(CHATS_DIR, f"{username}.json")
+    with open(path, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False)
+    return jsonify({"status": "saved"}), 200
+
+
+@app.route('/chats/<username>/<chat_id>', methods=['DELETE'])
+def delete_chat(username, chat_id):
+    """Permanently delete one chat for a user."""
+    path = os.path.join(CHATS_DIR, f"{username}.json")
+    if os.path.exists(path):
+        with open(path, 'r', encoding='utf-8') as f:
+            chats = json.load(f)
+        chats.pop(chat_id, None)
+        with open(path, 'w', encoding='utf-8') as f:
+            json.dump(chats, f, ensure_ascii=False)
+    return jsonify({"status": "deleted"}), 200
 
 
 if __name__ == '__main__':
